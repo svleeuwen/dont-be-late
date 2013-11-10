@@ -1,0 +1,29 @@
+<head>
+    <title>dont-be-late</title>
+</head>
+
+<body>
+{{> schedule}}
+</body>
+
+<template name="schedule">
+    <h1>Am I gonna be late?</h1>
+    <section class="departures">
+    {{#unless loading}}
+        {{#if departures}}
+        <h2>Possibly:</h2>
+        {{else}}
+        <h2>No.</h2>
+        {{/if}}
+        {{#each departures}}
+            <article class="departure">
+                <h3>{{ time }} <span class="alert">{{delay}}</span></h3>
+                <div><sub>({{route}})</sub></div>
+                <div></div>
+            </article>
+        {{/each}}
+    {{else}}
+        <h2>Loading</h2>
+    {{/unless}}
+    </section>
+</template>
