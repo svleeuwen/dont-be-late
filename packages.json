@@ -1,4 +1,5 @@
 {
   "xml2js": "0.2.8",
-  "moment": "2.4.0"
+  "moment": "2.4.0",
+  "node-boxcar": "0.1.2"
 }
