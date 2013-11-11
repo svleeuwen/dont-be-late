@@ -79,9 +79,21 @@ Meteor.methods({
         var msg = '';
         for (var i = 0; i < departures.length; i++) {
             var dep = departures[i];
-            msg += dep.time + ': ' + dep.delay + ', ';
+            msg += dep.time + ':';
+            if (dep.delay) {
+                msg += ' ' + dep.delay;
+            }
+            if (dep.track) {
+                msg += ' sp. ' + track;
+            }
+            if (i != departures.length - 1) {
+                msg += ', '
+            } else {
+                msg += '.'
+            }
         }
-        console.log('deps', msg);
+        console.log('Notification:', msg);
+
         var data = {
             'email': Meteor.settings.boxcar_email,
             'notification[message]': msg,
@@ -94,8 +106,7 @@ Meteor.methods({
 
         return true;
     }
-})
-;
+});
 
 
 /* UTILS */
