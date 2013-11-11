@@ -3,3 +3,7 @@
 body {
     padding: 2em
 }
+
+.alert {
+    margin-left: 1em;
+}

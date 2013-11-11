@@ -4,17 +4,19 @@ process.env.TZ = 'Europe/Amsterdam';
 TIME_FROM = '08:55';
 TIME_UNTIL = '09:10';
 
-POLL_INTERVAL = 60000;
+CHECK_TIME_FRAME_INTERVAL = 60000;
 
+NS_STATION_FROM = "Delft";
+NS_STATION_TO = "Rotterdam";
 NS_DATE_TIME_FORMAT = 'YYYY-MM-DDTHH:mm:ssZ';
 
 Meteor.startup(function () {
     Meteor.setInterval(function () {
-        if(withinTimeFrame(TIME_FROM, TIME_UNTIL)) {
-            console.log("with in timeframe, call api");
+        if (withinTimeFrame(TIME_FROM, TIME_UNTIL)) {
+            console.log("Within timeframe, call API");
             Meteor.call('getSchedule')
         }
-    }, POLL_INTERVAL)
+    }, CHECK_TIME_FRAME_INTERVAL);
 });
 
 Meteor.methods({
@@ -22,13 +24,13 @@ Meteor.methods({
         console.log("getSchedule");
         var xml2js = Meteor.require("xml2js");
         var moment = Meteor.require("moment");
-        var url = "http://webservices.ns.nl/ns-api-avt?station=Delft";
+        var url = "http://webservices.ns.nl/ns-api-avt?station=" + NS_STATION_FROM;
 
         var options = {'auth': Meteor.settings.ns_auth_string};
         var response = HTTP.get(url, options);
         console.log('Response status: ', response.statusCode);
 
-        var parser = xml2js.Parser();
+        var parser = xml2js.Parser({explicitArray: false});
         parser.parseString(response.content, function (err, result) {
             departures = result.ActueleVertrekTijden.VertrekkendeTrein;
             console.log('Parsing done')
@@ -38,22 +40,28 @@ Meteor.methods({
         for (var key in departures) {
             var departure = departures[key];
             // strip timezone, wrong format
-            var date_str = departure.VertrekTijd[0];
+            var date_str = departure.VertrekTijd;
             // parse date string to moment
             var date_time = moment(date_str, NS_DATE_TIME_FORMAT);
-            //console.log('departure', date_time)
-            var route_or_dest = departure.RouteTekst ? departure.RouteTekst[0] : departure.EindBestemming[0] + ' (eindbestemming)';
-            var on_route = route_or_dest.indexOf('Rotterdam') != -1;
-            var delay = departure.VertrekVertragingTekst ? departure.VertrekVertragingTekst[0] : '';
-            if (on_route && delay) {
-                var time = date_time.format('HH:mm');
-                selection.push({'time': time,
-                    'delay': delay,
-                    'route': route_or_dest
-                });
+            var route_or_dest = departure.RouteTekst ? departure.RouteTekst : departure.EindBestemming + ' (eindbestemming)';
+            var on_route = route_or_dest.indexOf(NS_STATION_TO) != -1;
+            var delay = departure.VertrekVertragingTekst ? departure.VertrekVertragingTekst : '';
+            var track_change = departure.VertrekSpoor['$']['wijziging'];
+            var result = {};
+            if (on_route && (delay || track_change == true)) {
+                result['time'] = date_time.format('HH:mm');
+                result['route'] = route_or_dest;
+
+                if (track_change == true) {
+                    result['track'] = departure.VertrekSpoor['_'];
+                }
+                if (delay) {
+                    result['delay'] = delay;
+                }
+                selection.push(result);
             }
         }
-        console.log('selection', selection);
+        console.log('Selection', selection);
 
         if (selection.length > 0) {
             Meteor.call('sendPushNotification', selection);
@@ -63,8 +71,8 @@ Meteor.methods({
     },
 
     sendPushNotification: function (departures) {
-        if(!withinTimeFrame(TIME_FROM, TIME_UNTIL)) {
-            console.log("not in timeframe");
+        if (!withinTimeFrame(TIME_FROM, TIME_UNTIL)) {
+            console.log("Not in timeframe, don't send push notification");
             return false;
         }
 
@@ -86,7 +94,8 @@ Meteor.methods({
 
         return true;
     }
-});
+})
+;
 
 
 /* UTILS */

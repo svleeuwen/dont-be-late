@@ -18,9 +18,16 @@
         {{/if}}
         {{#each departures}}
             <article class="departure">
-                <h3>{{ time }} <span class="alert">{{delay}}</span></h3>
+                <h3>
+                    {{ time }}
+                    {{#if delay}}
+                        <span class="alert">{{delay}}</span>
+                    {{/if}}
+                    {{#if track}}
+                        <span class="alert alert-danger">Sp. {{track}}</span>
+                    {{/if}}
+                </h3>
                 <div><sub>({{route}})</sub></div>
-                <div></div>
             </article>
         {{/each}}
     {{else}}
