@@ -12,7 +12,7 @@ NS_DATE_TIME_FORMAT = 'YYYY-MM-DDTHH:mm:ssZ';
 
 Meteor.startup(function () {
     Meteor.setInterval(function () {
-        if (withinTimeFrame(TIME_FROM, TIME_UNTIL)) {
+        if (utils.withinTimeFrame(moment(), TIME_FROM, TIME_UNTIL)) {
             console.log("Within timeframe, call API");
             Meteor.call('getSchedule')
         }
@@ -37,6 +37,7 @@ Meteor.methods({
         });
 
         var selection = [];
+        var notification_selection = [];
         for (var key in departures) {
             var departure = departures[key];
             // strip timezone, wrong format
@@ -48,7 +49,11 @@ Meteor.methods({
             var delay = departure.VertrekVertragingTekst ? departure.VertrekVertragingTekst : '';
             var track_change = departure.VertrekSpoor['$']['wijziging'];
             var result = {};
+            // is it on our route?
+            // is there delay OR a change of track?
+            // is the train originally leaving within our timeframe?
             if (on_route && (delay || track_change == true)) {
+
                 result['time'] = date_time.format('HH:mm');
                 result['route'] = route_or_dest;
 
@@ -58,20 +63,24 @@ Meteor.methods({
                 if (delay) {
                     result['delay'] = delay;
                 }
+
+                if (utils.withinTimeFrame(date_time, TIME_FROM, TIME_UNTIL)) {
+                    notification_selection.push(result);
+                }
                 selection.push(result);
             }
         }
         console.log('Selection', selection);
 
-        if (selection.length > 0) {
-            Meteor.call('sendPushNotification', selection);
+        if (notification_selection.length > 0) {
+            Meteor.call('sendPushNotification', notification_selection);
         }
 
         return selection;
     },
 
     sendPushNotification: function (departures) {
-        if (!withinTimeFrame(TIME_FROM, TIME_UNTIL)) {
+        if (!utils.withinTimeFrame(moment(), TIME_FROM, TIME_UNTIL)) {
             console.log("Not in timeframe, don't send push notification");
             return false;
         }
@@ -111,13 +120,14 @@ Meteor.methods({
 
 /* UTILS */
 
-function withinTimeFrame(from, until) {
-    var moment = Meteor.require('moment');
-    var now = moment();
-    var from_parts = from.split(':');
-    var until_parts = until.split(':');
-    var from_time = moment().set('hour', from_parts[0]).set('minute', from_parts[1]);
-    var until_time = moment().set('hour', until_parts[0]).set('minute', until_parts[1]);
-    // return false if now is before from or after until
-    return !(now.isBefore(from_time) || now.isAfter(until_time));
-}
+utils = {
+    withinTimeFrame: function (time, from, until) {
+        var moment = Meteor.require('moment');
+        var from_parts = from.split(':');
+        var until_parts = until.split(':');
+        var from_time = moment().set('hour', from_parts[0]).set('minute', from_parts[1]);
+        var until_time = moment().set('hour', until_parts[0]).set('minute', until_parts[1]);
+        // return false if now is before from or after until
+        return !(time.isBefore(from_time) || time.isAfter(until_time));
+    }
+};
