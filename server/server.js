@@ -6,11 +6,17 @@ TIME_UNTIL = '09:10';
 
 CHECK_TIME_FRAME_INTERVAL = 60000;
 
-NS_STATION_FROM = "Rotterdam";
-NS_STATION_TO = "Amsterdam";
+NS_STATION_FROM = "Delft";
+NS_STATION_TO = "Rotterdam";
 NS_DATE_TIME_FORMAT = 'YYYY-MM-DDTHH:mm:ssZ';
 
 INCLUDE_HIGHSPEED = true;
+
+
+Meteor.publish("userData", function () {
+  return Meteor.users.find({_id: this.userId});
+});
+
 
 Meteor.startup(function () {
     var moment = Meteor.require("moment");
@@ -22,9 +28,11 @@ Meteor.startup(function () {
     }, CHECK_TIME_FRAME_INTERVAL);
 });
 
+
 Meteor.methods({
     getTravelOptions: function () {
         console.log("getTravelInfo");
+        console.log("Meteor.user()", Meteor.user().services.facebook.email);
         var xml2js = Meteor.require("xml2js");
         var moment = Meteor.require("moment");
         var url = "http://webservices.ns.nl/ns-api-treinplanner?fromStation=" + NS_STATION_FROM +
@@ -182,6 +190,14 @@ Meteor.methods({
         HTTP.post(url, {params: data});
 
         return true;
+    },
+
+    updateUserProfile: function(profile){
+        console.log('updateUserProfile', profile);
+        Meteor.users.update({_id:Meteor.user()._id}, {$set:{'profile.stationFrom': profile.stationFrom,
+                                                            'profile.stationTo': profile.stationTo,
+                                                            'profile.timeFrom': profile.timeFrom,
+                                                            'profile.timeUntil': profile.timeUntil}})
     }
 });
 

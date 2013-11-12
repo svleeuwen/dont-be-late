@@ -4,34 +4,67 @@
 </head>
 
 <body>
-{{> schedule}}
+{{loginButtons}}
+<h1>Kom ik te laat?</h1>
+{{#if currentUser}}
+    {{> schedule}}
+    {{> userSettings}}
+{{ else }}
+    Je dient eerst in te loggen.
+{{/if}}
 </body>
 
 <template name="schedule">
-    <h1>Am I gonna be late?</h1>
     <section class="departures">
-    {{#unless loading}}
+        {{#unless loading}}
         {{#if departures}}
-        <h2>Possibly:</h2>
+        <h2>Misschien:</h2>
         {{else}}
-        <h2>No.</h2>
+        <h2>Nee.</h2>
         {{/if}}
         {{#each departures}}
-            <article class="departure">
-                <h3>
-                    {{ time }}
-                    {{#if delay}}
-                        <span class="alert">{{delay}}</span>
-                    {{/if}}
-                    {{#if track}}
-                        <span class="alert alert-danger">Sp. {{track}}</span>
-                    {{/if}}
-                </h3>
-                <div><sub>({{extra}})</sub></div>
-            </article>
+        <article class="departure">
+            <h3>
+                {{time}}
+                {{#if delay}}
+                <span class="alert">{{delay}}</span>
+                {{/if}}
+                {{#if track}}
+                <span class="alert alert-danger">Sp. {{track}}</span>
+                {{/if}}
+            </h3>
+
+            <div><sub>({{extra}})</sub></div>
+        </article>
         {{/each}}
-    {{else}}
-        <h2>Loading</h2>
-    {{/unless}}
+        {{else}}
+        <h2>Laden...</h2>
+        {{/unless}}
+    </section>
+</template>
+
+
+<template name="userSettings">
+    <h1>Instellingen</h1>
+    <section class="profile">
+        <label for="station-from">
+            Van station:
+            <input type="text" id="station-from" value="{{ currentUser.profile.stationFrom }}"
+                   placeholder="Bijv. Delft">
+        </label>
+        <label for="station-to">
+            Naar station:
+            <input type="text" id="station-to" value="{{ currentUser.profile.stationTo }}"
+                   placeholder="Bijv. Rotterdam">
+        </label>
+        <label for="time-from">
+            Tijd van:
+            <input id="time-from" type="text" value="{{ currentUser.profile.timeFrom }}" placeholder="uu:mm">
+        </label>
+        <label for="time-until">
+            Tijd tot:
+            <input id="time-until" type="text" value="{{ currentUser.profile.timeUntil }}" placeholder="uu:mm">
+        </label>
+        <button class="btn btn-primary save" type="submit">Opslaan</button>
     </section>
 </template>
