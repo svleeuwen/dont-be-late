@@ -7,7 +7,7 @@ Template.schedule.loading = function () {
 
 Template.schedule.created = function () {
     Session.set("departures", null);
-    Meteor.call('getSchedule', function (err, result) {
+    Meteor.call('getTravelOptions', function (err, result) {
         Session.set('departures', result)
     });
 };

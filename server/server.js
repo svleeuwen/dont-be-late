@@ -6,21 +6,87 @@ TIME_UNTIL = '09:10';
 
 CHECK_TIME_FRAME_INTERVAL = 60000;
 
-NS_STATION_FROM = "Delft";
-NS_STATION_TO = "Rotterdam";
+NS_STATION_FROM = "Rotterdam";
+NS_STATION_TO = "Amsterdam";
 NS_DATE_TIME_FORMAT = 'YYYY-MM-DDTHH:mm:ssZ';
 
+INCLUDE_HIGHSPEED = true;
+
 Meteor.startup(function () {
+    var moment = Meteor.require("moment");
     Meteor.setInterval(function () {
         if (utils.withinTimeFrame(moment(), TIME_FROM, TIME_UNTIL)) {
             console.log("Within timeframe, call API");
-            Meteor.call('getSchedule')
+            Meteor.call('getTravelOptions');
         }
     }, CHECK_TIME_FRAME_INTERVAL);
 });
 
 Meteor.methods({
+    getTravelOptions: function () {
+        console.log("getTravelInfo");
+        var xml2js = Meteor.require("xml2js");
+        var moment = Meteor.require("moment");
+        var url = "http://webservices.ns.nl/ns-api-treinplanner?fromStation=" + NS_STATION_FROM +
+            "&toStation=" + NS_STATION_TO + "&hslAllowed=" + INCLUDE_HIGHSPEED;
+
+        var options = {'auth': Meteor.settings.ns_auth_string};
+        var response = HTTP.get(url, options);
+        console.log('Response status: ', response.statusCode);
+
+        var travelOptions;
+        var parser = xml2js.Parser({explicitArray: false});
+        parser.parseString(response.content, function (err, result) {
+            travelOptions = result.ReisMogelijkheden.ReisMogelijkheid;
+            console.log('Parsing done')
+        });
+
+        var selection = [];
+        var notificationSelection = [];
+        for (var key in travelOptions) {
+            if (!travelOptions.hasOwnProperty(key)) continue;
+            var travelOption = travelOptions[key];
+            var departurePlanned = moment(travelOption.GeplandeVertrekTijd, NS_DATE_TIME_FORMAT);
+            var departureActual = moment(travelOption.ActueleVertrekTijd, NS_DATE_TIME_FORMAT);
+            var delay = departureActual.diff(departurePlanned, 'minutes');
+
+            if (!delay)
+                continue;
+
+            var trainType = travelOption.ReisDeel.VervoerType;
+            var trackNode = travelOption.ReisDeel.ReisStop[0].Spoor;
+            var trackChange = trackNode['$']['wijziging'];
+            var result = {};
+            // is there delay OR a change of track?
+            if (delay || trackChange == true) {
+
+                result['time'] = departureActual.format('HH:mm');
+                result['extra'] = trainType;
+
+                if (trackChange == true) {
+                    result['track'] = trackNode['_'];
+                }
+                if (delay) {
+                    result['delay'] = '+ ' + delay;
+                }
+                // if it's in our timeframe, send a pushnotification
+                if (utils.withinTimeFrame(departureActual, TIME_FROM, TIME_UNTIL)) {
+                    notificationSelection.push(result);
+                }
+                selection.push(result);
+            }
+        }
+        console.log('Selection', selection);
+
+        if (notificationSelection.length > 0) {
+            Meteor.call('sendPushNotification', notificationSelection);
+        }
+
+        return selection;
+    },
+
     getSchedule: function () {
+
         console.log("getSchedule");
         var xml2js = Meteor.require("xml2js");
         var moment = Meteor.require("moment");
@@ -30,6 +96,7 @@ Meteor.methods({
         var response = HTTP.get(url, options);
         console.log('Response status: ', response.statusCode);
 
+        var departures;
         var parser = xml2js.Parser({explicitArray: false});
         parser.parseString(response.content, function (err, result) {
             departures = result.ActueleVertrekTijden.VertrekkendeTrein;
@@ -39,6 +106,7 @@ Meteor.methods({
         var selection = [];
         var notification_selection = [];
         for (var key in departures) {
+            if (!departures.hasOwnProperty(key)) continue;
             var departure = departures[key];
             // strip timezone, wrong format
             var date_str = departure.VertrekTijd;
@@ -130,4 +198,5 @@ utils = {
         // return false if now is before from or after until
         return !(time.isBefore(from_time) || time.isAfter(until_time));
     }
+
 };
