@@ -42,13 +42,12 @@ Meteor.startup(function () {
 
 Meteor.methods({
     getTravelOptions: function (user) {
-        if(!user){
-            user = Meteor.user();
-        }
         console.log("getTravelInfo");
-        console.log("Meteor.user()", user.services.facebook.email);
         var xml2js = Meteor.require("xml2js");
         var moment = Meteor.require("moment");
+        if (!user) {
+            user = Meteor.user();
+        }
         var profile = user.profile;
 
         var url = "http://webservices.ns.nl/ns-api-treinplanner?fromStation=" + profile.stationFrom +
@@ -103,15 +102,16 @@ Meteor.methods({
         }
         console.log('Selection', selection);
 
-        if (notificationSelection.length > 0) {
-            Meteor.call('sendPushNotification', notificationSelection, user);
-        }
+        Meteor.call('sendPushNotification', notificationSelection, user);
 
         return selection;
     },
 
     sendPushNotification: function (departures, user) {
         console.log("sendPushNotification");
+        if (departures.length == 0 || user.profile.pushNotification) {
+            return false;
+        }
         if (!utils.withinTimeFrame(moment(), user.profile.timeFrom, user.profile.timeUntil)) {
             console.log("Not in timeframe, don't send push notification");
             return false;
@@ -168,16 +168,16 @@ utils = {
         var moment = Meteor.require('moment');
         var from_parts = from.split(':');
         var until_parts = until.split(':');
-        if(from_parts.length != 2 || until_parts.length != 2) return '';
+        if (from_parts.length != 2 || until_parts.length != 2) return '';
         var from_time = moment().set('hour', from_parts[0]).set('minute', from_parts[1]);
         var until_time = moment().set('hour', until_parts[0]).set('minute', until_parts[1]);
         // return false if now is before from or after until
         return !(time.isBefore(from_time) || time.isAfter(until_time));
     },
 
-    getMomentByTimeString: function(str) {
+    getMomentByTimeString: function (str) {
         var parts = str.split(':');
-        if(parts.length != 2) return '';
+        if (parts.length != 2) return '';
         return moment().set('hour', parts[0]).set('minute', parts[1]);
     }
 
