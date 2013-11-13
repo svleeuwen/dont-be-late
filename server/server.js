@@ -26,7 +26,7 @@ Meteor.startup(function () {
     Accounts.loginServiceConfiguration.insert({
         service: "facebook",
         appId: Meteor.settings.facebook_app_id,
-        secret: Meteor.settings.facebook_secret
+        secret: Meteor.settings.facebook_app_secret
     });
     var moment = Meteor.require("moment");
     Meteor.setInterval(function () {
