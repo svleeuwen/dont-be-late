@@ -7,12 +7,14 @@ Template.userSettings.events({
         var stationTo = template.find('#station-to').value;
         var timeFrom = template.find('#time-from').value;
         var timeUntil = template.find('#time-until').value;
+        var pushNotification = template.find('#push-notification').checked;
 
         var data = {
             stationFrom: stationFrom,
             stationTo: stationTo,
             timeFrom: timeFrom,
-            timeUntil: timeUntil
+            timeUntil: timeUntil,
+            pushNotification: pushNotification
         };
 
         Meteor.call("updateUserProfile", data);

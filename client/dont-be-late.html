@@ -7,10 +7,10 @@
 {{loginButtons}}
 <h1>Kom ik te laat?</h1>
 {{#if currentUser}}
-    {{> schedule}}
-    {{> userSettings}}
+{{> schedule}}
+{{> userSettings}}
 {{ else }}
-    Je dient eerst in te loggen.
+Je dient eerst in te loggen.
 {{/if}}
 </body>
 
@@ -25,9 +25,10 @@
         {{#each departures}}
         <article class="departure">
             <h3>
-                {{time}}
+                {{departure_planned}}
                 {{#if delay}}
                 <span class="alert">{{delay}}</span>
+                <span class="alert">{{departure_actual}}</span>
                 {{/if}}
                 {{#if track}}
                 <span class="alert alert-danger">Sp. {{track}}</span>
@@ -47,6 +48,7 @@
 <template name="userSettings">
     <h1>Instellingen</h1>
     <section class="profile">
+
         <label for="station-from">
             Van station:
             <input type="text" id="station-from" value="{{ currentUser.profile.stationFrom }}"
@@ -65,6 +67,14 @@
             Tijd tot:
             <input id="time-until" type="text" value="{{ currentUser.profile.timeUntil }}" placeholder="uu:mm">
         </label>
+
+        <div class="checkbox">
+            <label for="push-notification">
+                <input type="checkbox" id="push-notification"{{#if currentUser.profile.pushNotification }}
+                checked{{/if}}>
+                Push notificatie ingeschakeld
+            </label>
+        </div>
         <button class="btn btn-primary save" type="submit">Opslaan</button>
     </section>
 </template>
