@@ -99,7 +99,7 @@ Meteor.methods({
                     result['track'] = trackNode['_'];
                 }
                 if (delay) {
-                    result['delay'] = '+ ' + delay;
+                    result['delay'] = '+' + delay;
                 }
                 // if it's in our timeframe, send a pushnotification
                 if (utils.withinTimeFrame(departureActual, profile.timeFrom, profile.timeUntil)) {
@@ -116,8 +116,7 @@ Meteor.methods({
     },
 
     sendPushNotification: function (departures, user) {
-        console.log("sendPushNotification");
-        if (departures.length == 0 || user.profile.pushNotification) {
+        if (departures.length == 0 || !user.profile.pushNotification) {
             return false;
         }
         if (!utils.withinTimeFrame(moment(), user.profile.timeFrom, user.profile.timeUntil)) {
@@ -131,7 +130,7 @@ Meteor.methods({
             msg += dep.departure_planned + ':';
             if (dep.delay) {
                 msg += ' ' + dep.delay;
-                msg += ' (' + dep.departure_actual + ')';
+                msg += ' (' + dep.extra + ')';
             }
             if (dep.track) {
                 msg += ' sp. ' + track;
@@ -147,7 +146,7 @@ Meteor.methods({
         var data = {
             'email': user.services.facebook.email,
             'notification[message]': msg,
-            'notification[from_screen_name]': "You could be late",
+            //'notification[from_screen_name]': "You could be late",
             "notification[from_remote_service_id]": msg,
             'secret': Meteor.settings.boxcar_secret
         };
