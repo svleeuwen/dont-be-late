@@ -20,6 +20,14 @@ Meteor.publish("userData", function () {
 
 
 Meteor.startup(function () {
+    Accounts.loginServiceConfiguration.remove({
+        service: "facebook"
+    });
+    Accounts.loginServiceConfiguration.insert({
+        service: "facebook",
+        appId: Meteor.settings.facebook_app_id,
+        secret: Meteor.settings.facebook_secret
+    });
     var moment = Meteor.require("moment");
     Meteor.setInterval(function () {
         users = Meteor.users.find({});
