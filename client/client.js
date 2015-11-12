@@ -22,6 +22,9 @@ Template.userSettings.events({
         };
 
         Meteor.call("updateUserProfile", data);
+
+        updateTravelOptions();
+
         return false;
     }
 });
@@ -35,7 +38,11 @@ Template.schedule.loading = function () {
 
 Template.schedule.created = function () {
     Session.set("departures", null);
+    updateTravelOptions();
+};
+
+function updateTravelOptions() {
     Meteor.call('getTravelOptions', function (err, result) {
         Session.set('departures', result)
     });
-};
+}

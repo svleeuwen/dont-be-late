@@ -175,19 +175,19 @@ Meteor.methods({
         return true;
     },
 
-    updateUserProfile: function (profile) {
-        console.log('updateUserProfile', profile);
+    updateUserProfile: function (data) {
+        console.log('updateUserProfile', data);
         Meteor.users.update({_id: Meteor.user()._id}, {
             $set: {
-                'profile.stationFrom': profile.stationFrom,
-                'profile.stationTo': profile.stationTo,
-                'profile.timeFrom': profile.timeFrom,
-                'profile.timeUntil': profile.timeUntil,
-                'profile.timeCheckFrom': profile.timeCheckFrom,
-                'profile.pushNotification': profile.pushNotification,
-                'profile.boxCarToken': profile.boxCarToken
+                'profile.stationFrom': data.stationFrom,
+                'profile.stationTo': data.stationTo,
+                'profile.timeFrom': data.timeFrom,
+                'profile.timeUntil': data.timeUntil,
+                'profile.timeCheckFrom': data.timeCheckFrom,
+                'profile.pushNotification': data.pushNotification,
+                'profile.boxCarToken': data.boxCarToken
             }
-        })
+        });
     }
 });
 
