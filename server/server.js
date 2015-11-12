@@ -28,7 +28,7 @@ Meteor.startup(function () {
         appId: Meteor.settings.facebook_app_id,
         secret: Meteor.settings.facebook_app_secret
     });
-    var moment = Meteor.require("moment");
+    var moment = Meteor.npmRequire("moment");
     Meteor.setInterval(function () {
         users = Meteor.users.find({});
         users.forEach(function (user) {
@@ -51,8 +51,8 @@ Meteor.startup(function () {
 Meteor.methods({
     getTravelOptions: function (user) {
         console.log("getTravelInfo");
-        var xml2js = Meteor.require("xml2js");
-        var moment = Meteor.require("moment");
+        var xml2js = Meteor.npmRequire("xml2js");
+        var moment = Meteor.npmRequire("moment");
         if (!user) {
             user = Meteor.user();
         }
@@ -65,7 +65,7 @@ Meteor.methods({
         var response = HTTP.get(url, options);
         console.log('Response status: ', response.statusCode);
 
-        var travelOptions;
+        var travelOptions = {};
         var parser = xml2js.Parser({explicitArray: false});
         parser.parseString(response.content, function (err, result) {
             travelOptions = result.ReisMogelijkheden.ReisMogelijkheid;
@@ -116,6 +116,7 @@ Meteor.methods({
     },
 
     sendPushNotification: function (departures, user) {
+        var moment = Meteor.npmRequire('moment');
         if (departures.length == 0 || !user.profile.pushNotification) {
             return false;
         }
@@ -143,14 +144,28 @@ Meteor.methods({
         }
         console.log('Notification:', msg);
 
+        // see: http://help.boxcar.io/support/solutions/articles/6000004813-how-to-send-a-notification-to-boxcar-for-ios-users
         var data = {
-            'email': user.services.facebook.email,
-            'notification[message]': msg,
-            //'notification[from_screen_name]': "You could be late",
-            "notification[from_remote_service_id]": msg,
-            'secret': Meteor.settings.boxcar_secret
+            'user_credentials': 'pHJTLx69tT3KuGWX48nH', //user.services.facebook.email,
+            'notification[title]': "You could be late",
+            'notification[long_message]': msg
         };
-        var url = "http://boxcar.io/devices/providers/" + Meteor.settings.boxcar_key + "/notifications/broadcast";
+
+        //var options = {
+        //    'auth': Meteor.settings.boxcar_auth_string,
+        //    'data': {
+        //        'aps': {
+        //            'badge': 'auto',
+        //            'alert': msg
+        //        },
+        //        tags: ['@all']
+        //    }
+        //};
+
+        var url = "https://new.boxcar.io/api/notifications";
+
+        //var url = "http://boxcar.io/devices/providers/" + Meteor.settings.boxcar_key + "/notifications/broadcast";
+        console.log(data);
         HTTP.post(url, {params: data});
 
         return true;
@@ -172,7 +187,7 @@ Meteor.methods({
 
 utils = {
     withinTimeFrame: function (time, from, until) {
-        var moment = Meteor.require('moment');
+        var moment = Meteor.npmRequire('moment');
         var from_parts = from.split(':');
         var until_parts = until.split(':');
         if (from_parts.length != 2 || until_parts.length != 2) return '';
@@ -183,6 +198,7 @@ utils = {
     },
 
     getMomentByTimeString: function (str) {
+        var moment = Meteor.npmRequire('moment');
         var parts = str.split(':');
         if (parts.length != 2) return '';
         return moment().set('hour', parts[0]).set('minute', parts[1]);

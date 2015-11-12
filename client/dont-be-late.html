@@ -4,7 +4,7 @@
 </head>
 
 <body>
-{{loginButtons}}
+{{> loginButtons}}
 <h1>Kom ik te laat?</h1>
 {{#if currentUser}}
 {{> schedule}}
@@ -70,8 +70,7 @@ Je dient eerst in te loggen.
 
         <div class="checkbox">
             <label for="push-notification">
-                <input type="checkbox" id="push-notification"{{#if currentUser.profile.pushNotification }}
-                checked{{/if}}>
+                <input type="checkbox" id="push-notification" checked="{{#if currentUser.profile.pushNotification }}checked{{/if}}">
                 Push notificatie ingeschakeld
             </label>
         </div>
