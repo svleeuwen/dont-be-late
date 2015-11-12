@@ -94,6 +94,8 @@ Meteor.methods({
                 result['departure_planned'] = departurePlanned.format('HH:mm');
                 result['departure_actual'] = departureActual.format('HH:mm');
                 result['extra'] = trainType;
+                result['station_from'] = profile.stationFrom;
+                result['station_to'] = profile.stationTo;
 
                 if (trackChange == true) {
                     result['track'] = trackNode['_'];
@@ -101,7 +103,7 @@ Meteor.methods({
                 if (delay) {
                     result['delay'] = '+' + delay;
                 }
-                // if it's in our timeframe, send a pushnotification
+                // if it's in our time frame, send a push notification
                 if (utils.withinTimeFrame(departureActual, profile.timeFrom, profile.timeUntil)) {
                     notificationSelection.push(result);
                 }
@@ -124,14 +126,20 @@ Meteor.methods({
             console.log("Not in timeframe, don't send push notification");
             return false;
         }
+        if (!user.profile.boxCarToken) {
+            console.log("No boxcar access token provided");
+            return false;
+        }
 
         var msg = '';
         for (var i = 0; i < departures.length; i++) {
             var dep = departures[i];
+            // add slice of station strings
+            msg += dep.station_from.slice(0, 3) + '-' + dep.station_to.slice(0, 3) + ': ';
             msg += dep.departure_planned + ':';
             if (dep.delay) {
                 msg += ' ' + dep.delay;
-                msg += ' (' + dep.extra + ')';
+                msg += ' (' + dep.extra.slice(0, 3) + ')';
             }
             if (dep.track) {
                 msg += ' sp. ' + track;
@@ -142,43 +150,48 @@ Meteor.methods({
                 msg += '.'
             }
         }
-        console.log('Notification:', msg);
+
+        var oldMsg = user.profile.latestPushNotification;
+        if (msg == oldMsg) {
+            // do not the same message more than once
+            console.log('Message has not changed:', msg);
+            return false;
+        }
 
         // see: http://help.boxcar.io/support/solutions/articles/6000004813-how-to-send-a-notification-to-boxcar-for-ios-users
         var data = {
-            'user_credentials': 'pHJTLx69tT3KuGWX48nH', //user.services.facebook.email,
-            'notification[title]': "You could be late",
+            'user_credentials': user.profile.boxCarToken,
+            'notification[title]': msg,
             'notification[long_message]': msg
         };
 
-        //var options = {
-        //    'auth': Meteor.settings.boxcar_auth_string,
-        //    'data': {
-        //        'aps': {
-        //            'badge': 'auto',
-        //            'alert': msg
-        //        },
-        //        tags: ['@all']
-        //    }
-        //};
+        // save for later
+        Meteor.users.update({_id: user._id}, {
+            $set: {
+                'profile.latestPushNotification': msg
+            }
+        });
 
         var url = "https://new.boxcar.io/api/notifications";
-
-        //var url = "http://boxcar.io/devices/providers/" + Meteor.settings.boxcar_key + "/notifications/broadcast";
-        console.log(data);
         HTTP.post(url, {params: data});
+
+        console.log('Send notification:', data);
 
         return true;
     },
 
     updateUserProfile: function (profile) {
         console.log('updateUserProfile', profile);
-        Meteor.users.update({_id: Meteor.user()._id}, {$set: {'profile.stationFrom': profile.stationFrom,
-            'profile.stationTo': profile.stationTo,
-            'profile.timeFrom': profile.timeFrom,
-            'profile.timeUntil': profile.timeUntil,
-            'profile.pushNotification': profile.pushNotification
-        }})
+        Meteor.users.update({_id: Meteor.user()._id}, {
+            $set: {
+                'profile.stationFrom': profile.stationFrom,
+                'profile.stationTo': profile.stationTo,
+                'profile.timeFrom': profile.timeFrom,
+                'profile.timeUntil': profile.timeUntil,
+                'profile.pushNotification': profile.pushNotification,
+                'profile.boxCarToken': profile.boxCarToken
+            }
+        })
     }
 });
 

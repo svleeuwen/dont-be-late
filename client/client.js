@@ -8,13 +8,15 @@ Template.userSettings.events({
         var timeFrom = template.find('#time-from').value;
         var timeUntil = template.find('#time-until').value;
         var pushNotification = template.find('#push-notification').checked;
+        var boxCarToken = template.find('#box-car-key').value;
 
         var data = {
             stationFrom: stationFrom,
             stationTo: stationTo,
             timeFrom: timeFrom,
             timeUntil: timeUntil,
-            pushNotification: pushNotification
+            pushNotification: pushNotification,
+            boxCarToken: boxCarToken
         };
 
         Meteor.call("updateUserProfile", data);
