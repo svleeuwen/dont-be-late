@@ -1,13 +1,8 @@
 // set default timezone
 process.env.TZ = 'Europe/Amsterdam';
 
-TIME_FROM = '08:55';
-TIME_UNTIL = '09:10';
-
 CHECK_TIME_FRAME_INTERVAL = 60000;
 
-NS_STATION_FROM = "Delft";
-NS_STATION_TO = "Rotterdam";
 NS_DATE_TIME_FORMAT = 'YYYY-MM-DDTHH:mm:ssZ';
 
 INCLUDE_HIGHSPEED = true;
@@ -39,7 +34,7 @@ Meteor.startup(function () {
             //    return false;
             //}
 
-            if (utils.withinTimeFrame(moment(), profile.timeFrom, profile.timeUntil)) {
+            if (utils.withinTimeFrame(moment(), profile.timeCheckFrom, profile.timeUntil)) {
                 console.log("Within timeframe, call API");
                 Meteor.call('getTravelOptions', user);
             }
@@ -103,7 +98,7 @@ Meteor.methods({
                 if (delay) {
                     result['delay'] = '+' + delay;
                 }
-                // if it's in our time frame, send a push notification
+                // if it's in our time frame, add for push notification
                 if (utils.withinTimeFrame(departureActual, profile.timeFrom, profile.timeUntil)) {
                     notificationSelection.push(result);
                 }
@@ -122,7 +117,7 @@ Meteor.methods({
         if (departures.length == 0 || !user.profile.pushNotification) {
             return false;
         }
-        if (!utils.withinTimeFrame(moment(), user.profile.timeFrom, user.profile.timeUntil)) {
+        if (!utils.withinTimeFrame(moment(), user.profile.timeCheckFrom, user.profile.timeUntil)) {
             console.log("Not in timeframe, don't send push notification");
             return false;
         }
@@ -188,6 +183,7 @@ Meteor.methods({
                 'profile.stationTo': profile.stationTo,
                 'profile.timeFrom': profile.timeFrom,
                 'profile.timeUntil': profile.timeUntil,
+                'profile.timeCheckFrom': profile.timeCheckFrom,
                 'profile.pushNotification': profile.pushNotification,
                 'profile.boxCarToken': profile.boxCarToken
             }

@@ -7,6 +7,7 @@ Template.userSettings.events({
         var stationTo = template.find('#station-to').value;
         var timeFrom = template.find('#time-from').value;
         var timeUntil = template.find('#time-until').value;
+        var timeCheckFrom = template.find('#time-check-from').value;
         var pushNotification = template.find('#push-notification').checked;
         var boxCarToken = template.find('#box-car-key').value;
 
@@ -15,6 +16,7 @@ Template.userSettings.events({
             stationTo: stationTo,
             timeFrom: timeFrom,
             timeUntil: timeUntil,
+            timeCheckFrom: timeCheckFrom,
             pushNotification: pushNotification,
             boxCarToken: boxCarToken
         };

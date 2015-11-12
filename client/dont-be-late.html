@@ -60,12 +60,16 @@ Je dient eerst in te loggen.
                    placeholder="Bijv. Rotterdam">
         </label>
         <label for="time-from">
-            Tijd van:
+            Treinen die vertrekken vanaf:
             <input id="time-from" type="text" value="{{ currentUser.profile.timeFrom }}" placeholder="uu:mm">
         </label>
         <label for="time-until">
-            Tijd tot:
+            Treinen die vertrekken tot:
             <input id="time-until" type="text" value="{{ currentUser.profile.timeUntil }}" placeholder="uu:mm">
+        </label>
+        <label for="time-check-from">
+            Start met checken vanaf:
+            <input id="time-check-from" type="text" value="{{ currentUser.profile.timeCheckFrom }}" placeholder="uu:mm">
         </label>
 
         <div class="checkbox">
@@ -75,7 +79,7 @@ Je dient eerst in te loggen.
             </label>
         </div>
 
-        <label for="time-until">
+        <label for="box-car-key">
             <a href="https://itunes.apple.com/en/app/boxcar-2/id782987891?mt=8">Boxcar 2</a> access token:
             <input id="box-car-key" type="text" value="{{ currentUser.profile.boxCarToken }}">
         </label>
